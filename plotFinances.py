@@ -9,18 +9,18 @@ from colors import color_scale
 
 def main(sources_file):
     print("Reading source data...")
-    sources = readSources(sources_file)
+    sources = read_sources(sources_file)
 
     # List of lists where each top level list is a data source and each child list
     # contains maps of data
-    # data = [readSourceFile(info["file"]) for info in sources]
+    # data = [read_source_file(info["file"]) for info in sources]
     # TODO: Consider doing this in a comprehension
     rawData = {}
     for source in sources:
         rawData[source["series"]] = {}
         rawData[source["series"]]["file"] = source["file"]
         rawData[source["series"]]["color"] = source["color"]
-        rawData[source["series"]]["data"] = readSourceFile(source["file"])
+        rawData[source["series"]]["data"] = read_source_file(source["file"])
 
     # Ordered lists to use in plot
     seriesNames = []
@@ -36,25 +36,25 @@ def main(sources_file):
     for source, info in rawData.items():
         for entry in info["data"]:
             dates.add(entry["date"])
-    dates = sorted(list(dates), key=dateStringSortKey)
+    dates = sorted(list(dates), key=date_string_sort_key)
     dateIndexMap = {dates[i]:i for i in range(0, len(dates))}
 
-    ySeries = createSparseData(dates, dateIndexMap, rawData)
+    ySeries = create_sparse_data(dates, dateIndexMap, rawData)
 
     print("Extrapolating data...")
-    extrapolateMissingData(dates, ySeries)
+    extrapolate_missing_data(dates, ySeries)
 
     print("Plotting data...")
-    createPlot(dates, ySeries, seriesNames, colors)
+    create_plot(dates, ySeries, seriesNames, colors)
 
 #------------------- Data manipulation methods -------------------#
 
-def createSparseData(dates, dateIndexMap, rawData):
+def create_sparse_data(dates, dateIndexMap, rawData):
     sparseData = []
     for source, info in rawData.items():
         principleValues = [None] * len(dates)
         earningsValues = [None] * len(dates)
-        # Keeping a running sum relies on the fact that the raw data entries are sorted by date in readSourceFile()
+        # Keeping a running sum relies on the fact that the raw data entries are sorted by date in read_source_file()
         principleSum = 0 
         earningsSum = 0
         for entry in info["data"]:
@@ -72,7 +72,7 @@ def createSparseData(dates, dateIndexMap, rawData):
     Input is an array of arrays
 '''
 # TODO: Consider not modifying the data in place
-def extrapolateMissingData(dates, sparseData):
+def extrapolate_missing_data(dates, sparseData):
     for series in sparseData:
         i = 0
         # Replace leading None values with 0s
@@ -96,9 +96,9 @@ def extrapolateMissingData(dates, sparseData):
 
                     # dates[i-1] and series[i-1] are guaranteed to exist since we populate None values
                     # at the front of the list with 0s
-                    previousDate = stringToDate(dates[i-1]) 
-                    thisDate = stringToDate(dates[i])
-                    nextDate = stringToDate(dates[j])
+                    previousDate = string_to_date(dates[i-1]) 
+                    thisDate = string_to_date(dates[i])
+                    nextDate = string_to_date(dates[j])
                     numDaysSincePrevious = float((thisDate - previousDate).days)
                     daysDifference = float((nextDate - previousDate).days)
 
@@ -112,7 +112,7 @@ def extrapolateMissingData(dates, sparseData):
 
 #------------------- Output methods -------------------#
 
-def createPlot(dates, ySeries, seriesNames, colors):
+def create_plot(dates, ySeries, seriesNames, colors):
     x = [dt.datetime.strptime(d,'%m/%d/%Y').date() for d in dates]
     
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d/%Y'))
@@ -138,36 +138,36 @@ def createPlot(dates, ySeries, seriesNames, colors):
 
 #------------------- Date methods -------------------#
 
-def stringToDate(dateString):
+def string_to_date(dateString):
     format = '%m/%d/%Y'
     return dt.datetime.strptime(dateString, format).date()
 
-def dateStringSortKey(dateString):
+def date_string_sort_key(dateString):
     format = '%m/%d/%Y'
     # Use arbitrary date for comparison of all dates
     referenceDate = dt.datetime.strptime('01/01/1970', format).date()
     return (dt.datetime.strptime(dateString, format).date() - referenceDate).total_seconds()
 
-def extractDateSortKey(dict):
+def extract_date_sort_key(dict):
     dateString = dict["date"]
-    return dateStringSortKey(dateString)
+    return date_string_sort_key(dateString)
 
 #------------------- Input methods -------------------#
 
-def readSources(file_name):
+def read_sources(file_name):
     with open(file_name, 'r') as sources:
         reader = csv.reader(sources, delimiter=',')
         sources = [{"file": row[0], "series": row[1], "color": row[2]} for row in reader]
         sources = sources[1:] # Remove headers
     return sources
 
-def readSourceFile(file_name):
+def read_source_file(file_name):
     with open(file_name, 'r') as source:
         reader = csv.reader(source, delimiter=',')
         source = [{"date": row[0], "balance": row[1], "investment": row[2], "earnings": row[3]} for row in reader]
         source = source[1:] # Remove headers
         # The fact that this is sorted is used to find closest values when extracting data
-        source = sorted(source, key=extractDateSortKey) # sort by date
+        source = sorted(source, key=extract_date_sort_key) # sort by date
     return source
 
 #------------------- ------------------- -------------------#
