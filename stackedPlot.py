@@ -1,11 +1,12 @@
 import sys
-import csv
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime as dt
 import matplotlib.dates as mdates
 
 from colors import color_scale
+from csvParsers import *
+from dateManipulation import *
 
 def main(sources_file):
     print("Reading source data...")
@@ -59,9 +60,9 @@ def createSparseData(dates, dateIndexMap, rawData):
         earningsSum = 0
         for entry in info["data"]:
             index = dateIndexMap[entry["date"]]
-            principleSum += float(entry["investment"])
+            principleSum += entry["investment"]
             principleValues[index] = principleSum
-            earningsSum += float(entry["earnings"])
+            earningsSum += entry["earnings"]
             earningsValues[index] = earningsSum
         sparseData.append(principleValues)
         sparseData.append(earningsValues)
@@ -136,45 +137,11 @@ def createPlot(dates, ySeries, seriesNames, colors):
 
     plt.show()
 
-#------------------- Date methods -------------------#
-
-def stringToDate(dateString):
-    format = '%m/%d/%Y'
-    return dt.datetime.strptime(dateString, format).date()
-
-def dateStringSortKey(dateString):
-    format = '%m/%d/%Y'
-    # Use arbitrary date for comparison of all dates
-    referenceDate = dt.datetime.strptime('01/01/1970', format).date()
-    return (dt.datetime.strptime(dateString, format).date() - referenceDate).total_seconds()
-
-def extractDateSortKey(dict):
-    dateString = dict["date"]
-    return dateStringSortKey(dateString)
-
-#------------------- Input methods -------------------#
-
-def readSources(file_name):
-    with open(file_name, 'r') as sources:
-        reader = csv.reader(sources, delimiter=',')
-        sources = [{"file": row[0], "series": row[1], "color": row[2]} for row in reader]
-        sources = sources[1:] # Remove headers
-    return sources
-
-def readSourceFile(file_name):
-    with open(file_name, 'r') as source:
-        reader = csv.reader(source, delimiter=',')
-        source = [{"date": row[0], "balance": row[1], "investment": row[2], "earnings": row[3]} for row in reader]
-        source = source[1:] # Remove headers
-        # The fact that this is sorted is used to find closest values when extracting data
-        source = sorted(source, key=extractDateSortKey) # sort by date
-    return source
-
 #------------------- ------------------- -------------------#
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("Usage: python plotFinances.py <file>")
+        print("Usage: python stackedPlot.py <sourcesFile.csv>")
         exit()
     file_name = sys.argv[1]
     main(file_name)

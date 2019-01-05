@@ -12,8 +12,9 @@ def readSources(file_name):
 def readSourceFile(file_name):
     with open(file_name, 'r') as source:
         reader = csv.reader(source, delimiter=',')
-        source = [{"date": row[0], "balance": row[1], "investment": row[2], "earnings": row[3]} for row in reader]
-        source = source[1:] # Remove headers
+        reader.__next__() # Remove headers
+        source = [{"date": row[0], "balance": float(row[1]), "investment": float(row[2]), "earnings": float(row[3])} for row in reader]
+        # source = source[1:] # Remove headers
         # The fact that this is sorted is used to find closest values when extracting data
         source = sorted(source, key=extractDateSortKey) # sort by date
     return source
