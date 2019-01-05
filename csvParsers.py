@@ -1,0 +1,19 @@
+import csv
+
+from dateManipulation import extractDateSortKey
+
+def readSources(file_name):
+    with open(file_name, 'r') as sources:
+        reader = csv.reader(sources, delimiter=',')
+        sources = [{"file": row[0], "series": row[1], "color": row[2]} for row in reader]
+        sources = sources[1:] # Remove headers
+    return sources
+
+def readSourceFile(file_name):
+    with open(file_name, 'r') as source:
+        reader = csv.reader(source, delimiter=',')
+        source = [{"date": row[0], "balance": row[1], "investment": row[2], "earnings": row[3]} for row in reader]
+        source = source[1:] # Remove headers
+        # The fact that this is sorted is used to find closest values when extracting data
+        source = sorted(source, key=extractDateSortKey) # sort by date
+    return source
