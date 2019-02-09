@@ -1,6 +1,6 @@
 import csv
 
-from dateManipulation import extractDateSortKey
+from dateManipulation import extract_date_sort_key
 
 def read_sources(file_name):
     with open(file_name, 'r') as sources:
@@ -16,5 +16,5 @@ def read_source_file(file_name):
         source = [{"date": row[0], "balance": float(row[1]), "investment": float(row[2]), "earnings": float(row[3])} for row in reader]
         # source = source[1:] # Remove headers
         # The fact that this is sorted is used to find closest values when extracting data
-        source = sorted(source, key=extractDateSortKey) # sort by date
+        source = sorted(source, key=extract_date_sort_key) # sort by date
     return source

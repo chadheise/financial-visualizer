@@ -52,9 +52,9 @@ def createExpectedSeries(entries, annualReturnRate):
     for i in range(0, len(entries)):
         entry = entries[i]
 
-        totalPeriods = daysInYear(stringToDate(entry["date"]).year)
+        totalPeriods = days_in_year(string_to_date(entry["date"]).year)
         returnPerPeriod = (1.0 + annualReturnRate) ** (1.0 / totalPeriods) - 1.0
-        numPeriods = (stringToDate(entry["date"]) - stringToDate(entries[i-1]["date"])).days
+        numPeriods = (string_to_date(entry["date"]) - string_to_date(entries[i-1]["date"])).days
 
         runningTotal = runningTotal * ((1.0 + returnPerPeriod) ** numPeriods)
         runningTotal += entry["investment"]
