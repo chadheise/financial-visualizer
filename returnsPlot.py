@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 import datetime as dt
 import matplotlib.dates as mdates
 
-from csvParsers import readSourceFile
+from csvParsers import read_source_file
 from dateManipulation import *
 
 def main(source_file):
     print("Reading source data...")
-    entries = readSourceFile(source_file)
+    entries = read_source_file(source_file)
 
     # Ordered lists to use in plot
     seriesNames = ["Principle", "Balance", "Expected"]

@@ -2,14 +2,14 @@ import csv
 
 from dateManipulation import extractDateSortKey
 
-def readSources(file_name):
+def read_sources(file_name):
     with open(file_name, 'r') as sources:
         reader = csv.reader(sources, delimiter=',')
         sources = [{"file": row[0], "series": row[1], "color": row[2]} for row in reader]
         sources = sources[1:] # Remove headers
     return sources
 
-def readSourceFile(file_name):
+def read_source_file(file_name):
     with open(file_name, 'r') as source:
         reader = csv.reader(source, delimiter=',')
         reader.__next__() # Remove headers
