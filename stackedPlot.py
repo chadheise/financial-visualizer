@@ -7,6 +7,7 @@ import matplotlib.dates as mdates
 from colors import color_scale
 from csvParsers import *
 from dateManipulation import *
+from utils import get_factor_of_ten
 
 def main(sources_file):
     print("Reading source data...")
@@ -127,10 +128,15 @@ def create_plot(dates, ySeries, seriesNames, colors):
     plt.xticks(xTicks, rotation=45)
 
     y_max = max(np.sum(ySeries, axis=0))
-    y_step = y_max / 20
-    y_max_rounded = (int(y_max / y_step) + 2) * y_step
-    y_range = np.arange(y_max_rounded, step=y_step)
+    y_min_num_ticks = 10
+    y_max_num_ticks = 20
+    y_step = get_factor_of_ten(y_max / y_max_num_ticks)
+    # Ensure there is a good number of ticks
+    while((y_max / y_step) < y_min_num_ticks):
+        y_step = int(y_step / 2)
+    y_range = np.arange(y_max + y_step, step=y_step)
     plt.yticks(y_range, ['$%d' % (value) for value in y_range])
+    plt.ylim(ymin=0)
 
     plt.title('Account Values Over Time')
     plt.legend(loc='upper left')
