@@ -12,9 +12,9 @@ To execute the script run:
 To see what the generated graph looks like, see sampleData/stackedPlot.png
 
 ## Financial Returns
-* Useful in comparing the long term gains of an account relative to a benchmark annual return percentage
+* Useful in comparing the long term gains of an account relative to a benchmark annual return percentage. The annual return percentage as a decimal is passed as the last argument.
 
 To execute the script run:
-`python returnsPlot.py sampleData/source1.csv`
+`python returnsPlot.py sampleData/source1.csv .08`
 
 To see what the generated graph looks like, see sampleData/returnsPlotSource1.png

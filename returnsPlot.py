@@ -8,12 +8,13 @@ from csvParsers import read_source_file
 from dateManipulation import *
 from utils import get_factor_of_ten
 
-def main(source_file):
+def main(source_file, expected_annual_return_rate):
     print("Reading source data...")
     entries = read_source_file(source_file)
 
     # Ordered lists to use in plot
-    seriesNames = ["Principle", "Balance", "Expected"]
+    rate = float(expected_annual_return_rate)
+    seriesNames = ["Principle", "Balance", "Expected @ %.2f%%/yr" % (rate * 100.0)]
     colors = ["red", "blue", "green"] 
 
     dates = [entry["date"] for entry in entries]
@@ -21,7 +22,7 @@ def main(source_file):
     ySeries = []
     principleSeries = createPrincipleSeries([entry["investment"] for entry in entries])
     balanceSeries = createBalanceSeries(entries)
-    expectedSeries = createExpectedSeries(entries, 0.08)
+    expectedSeries = createExpectedSeries(entries, rate)
 
     ySeries = [principleSeries, balanceSeries, expectedSeries]
 
@@ -101,8 +102,9 @@ def createPlot(dates, ySeries, seriesNames, colors):
 #------------------- ------------------- -------------------#
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: python returnsPlot.py <source.csv>")
+    if len(sys.argv) != 3:
+        print("Usage: python returnsPlot.py <source.csv> <expectedAnnualReturnRate>")
         exit()
     file_name = sys.argv[1]
-    main(file_name)
+    expected_annual_return_rate = sys.argv[2]
+    main(file_name, expected_annual_return_rate)
