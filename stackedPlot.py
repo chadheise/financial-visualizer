@@ -9,7 +9,7 @@ from csvParsers import *
 from dateManipulation import *
 from utils import get_factor_of_ten
 
-def main(sources_file):
+def main(sources_file, start_date):
     print("Reading source data...")
     sources = read_sources(sources_file)
 
@@ -45,6 +45,10 @@ def main(sources_file):
 
     print("Extrapolating data...")
     extrapolate_missing_data(dates, ySeries)
+
+    if start_date:
+        print("Filtering data by date...")
+        dates, ySeries = filter_by_date(dates, ySeries, start_date)
 
     print("Plotting data...")
     create_plot(dates, ySeries, seriesNames, colors)
@@ -112,6 +116,22 @@ def extrapolate_missing_data(dates, sparseData):
                     series[i] = previousValue + valuePerDay * numDaysSincePrevious
             i += 1
 
+'''
+    Filters the output based on the provided start date.
+    Requires the dates and data provided as inputs are already sorted.
+'''
+def filter_by_date(dates, sparse_data, start_date_string):
+    # TODO: Put the start date in the date list before extrapolating data to guarantee
+    # a datapoint on the start date
+    startDate = dt.datetime.strptime(start_date_string, '%m/%d/%Y').date()
+    startIndex = 0
+    while(dt.datetime.strptime(dates[startIndex], '%m/%d/%Y').date() < startDate):
+        startIndex += 1
+
+    dates = dates[startIndex:]
+    sparseData = [series[startIndex:] for series in sparse_data]
+    return (dates, sparseData)
+
 #------------------- Output methods -------------------#
 
 def create_plot(dates, ySeries, seriesNames, colors):
@@ -146,8 +166,11 @@ def create_plot(dates, ySeries, seriesNames, colors):
 #------------------- ------------------- -------------------#
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: python stackedPlot.py <sourcesFile.csv>")
+    if len(sys.argv) != 2 and len(sys.argv) != 3:
+        print("Usage: python stackedPlot.py <sourcesFile.csv> <optionalStartDate>")
         exit()
     file_name = sys.argv[1]
-    main(file_name)
+    start_date = None
+    if len(sys.argv) > 2:
+        start_date = sys.argv[2]
+    main(file_name, start_date)

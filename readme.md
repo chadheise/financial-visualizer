@@ -11,6 +11,9 @@ To execute the script run:
 
 To see what the generated graph looks like, see sampleData/stackedPlot.png
 
+To only show data after a given start date, run:
+`python stackedPlot.py sampleData/sources.csv 03/20/2014`
+
 ## Financial Returns
 * Useful in comparing the long term gains of an account relative to a benchmark annual return percentage. The annual return percentage as a decimal is passed as the last argument.
 
