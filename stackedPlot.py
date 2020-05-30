@@ -136,7 +136,7 @@ def create_plot(dates, ySeries, seriesNames, colors):
         y_step = int(y_step / 2)
     y_range = np.arange(y_max + y_step, step=y_step)
     plt.yticks(y_range, ['$%d' % (value) for value in y_range])
-    plt.ylim(ymin=0)
+    plt.ylim(bottom=0)
 
     plt.title('Account Values Over Time')
     plt.legend(loc='upper left')
