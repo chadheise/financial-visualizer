@@ -19,6 +19,7 @@ def main(sources_file, start_date):
     # TODO: Consider doing this in a comprehension
     rawData = {}
     for source in sources:
+        print("   Reading " + source["file"])
         rawData[source["series"]] = {}
         rawData[source["series"]]["file"] = source["file"]
         rawData[source["series"]]["color"] = source["color"]
@@ -148,9 +149,11 @@ def create_plot(dates, ySeries, seriesNames, colors):
     plt.xticks(xTicks, rotation=45)
 
     y_max = max(np.sum(ySeries, axis=0))
+
     y_min_num_ticks = 10
     y_max_num_ticks = 20
     y_step = get_factor_of_ten(y_max / y_max_num_ticks)
+
     # Ensure there is a good number of ticks
     while((y_max / y_step) < y_min_num_ticks):
         y_step = int(y_step / 2)
