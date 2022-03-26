@@ -62,7 +62,8 @@ def create_sparse_data(dates, dateIndexMap, rawData):
         principleValues = [None] * len(dates)
         earningsValues = [None] * len(dates)
         # Keeping a running sum relies on the fact that the raw data entries are sorted by date in read_source_file()
-        principleSum = 0 
+        # Use the initial beginning balance as starting principle
+        principleSum = info["data"][0]["balance"]
         earningsSum = 0
         for entry in info["data"]:
             index = dateIndexMap[entry["date"]]
