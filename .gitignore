@@ -1,3 +1,5 @@
 myData/*
+s&p500Data/*
 __pycache__/*
+python/__pycache__/*
 .DS_Store
