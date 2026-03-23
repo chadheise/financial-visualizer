@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getDisplayName, getFolderDisplayName, groupByFolder } from '../../lib/fileUtils';
+import { RETURNS_LABELS } from '../../theme';
 
 interface Props {
   onLoad: (filePath: string, annualRate: number) => void;
@@ -46,7 +47,7 @@ export function ReturnsControls({ onLoad, loading }: Props) {
         </select>
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-        Expected annual return:
+        {RETURNS_LABELS.benchmarkControl}:
         <input
           type="number"
           step="0.1"

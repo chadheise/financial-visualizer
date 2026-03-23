@@ -1,8 +1,17 @@
+// Returns plot series label strings — single source of truth used by both
+// the controls form and the chart legend to keep naming consistent.
+export const RETURNS_LABELS = {
+  benchmarkControl: 'Benchmark annual return',
+  benchmarkSeries:  (rate: number) => `Benchmark @ ${(rate * 100).toFixed(2)}%/yr`,
+  realSeries:       (rate: number) => `Real @ ${(rate * 100).toFixed(2)}%/yr`,
+} as const;
+
 // Chart series colors — muted palette that works on dark backgrounds
 export const SERIES_COLORS = {
-  principle: '#c97b7b',  // muted rose
-  balance:   '#6a9fd4',  // soft steel blue
-  expected:  '#6aad87',  // muted sage green
+  principle:    '#c97b7b',  // muted rose
+  balance:      '#6a9fd4',  // soft steel blue
+  expected:     '#6aad87',  // muted sage green
+  realExpected: '#c9a84c',  // muted amber
 } as const;
 
 // Recharts component stroke/fill colors that respect the dark theme

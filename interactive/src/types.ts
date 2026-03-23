@@ -16,6 +16,7 @@ export interface ReturnsChartData {
   principle: number;
   balance: number;
   expected: number;
+  realExpected: number;
 }
 
 export interface StackedChartData {

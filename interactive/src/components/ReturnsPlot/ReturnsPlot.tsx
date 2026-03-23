@@ -6,34 +6,36 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 import type { ReturnsChartData } from '../../types';
 import { AlignedTooltip } from '../shared/AlignedTooltip';
-import { SERIES_COLORS, CHART_STYLE, formatAxisDollar } from '../../theme';
+import { SERIES_COLORS, CHART_STYLE, formatAxisDollar, RETURNS_LABELS } from '../../theme';
 
 interface Props {
   data: ReturnsChartData[];
   annualRate: number;
+  realRate: number | null;
 }
 
 function formatDollar(value: number): string {
   return '$' + Math.round(value).toLocaleString();
 }
 
-export function ReturnsPlot({ data, annualRate }: Props) {
+export function ReturnsPlot({ data, annualRate, realRate }: Props) {
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [showDots, setShowDots] = useState(false);
 
   if (data.length === 0) return null;
 
-  const rateLabel = `Expected @ ${(annualRate * 100).toFixed(2)}%/yr`;
+  const rateLabel = RETURNS_LABELS.benchmarkSeries(annualRate);
+  const realRateLabel = realRate !== null ? RETURNS_LABELS.realSeries(realRate) : 'Real Return';
   const latest = data[data.length - 1];
-  const latestPoints = [
-    { label: 'Principle', value: latest.principle, color: SERIES_COLORS.principle },
-    { label: 'Balance',   value: latest.balance,   color: SERIES_COLORS.balance },
-    { label: rateLabel,   value: latest.expected,  color: SERIES_COLORS.expected },
+  const series = [
+    { key: 'Balance',     label: 'Balance',      value: latest.balance,      color: SERIES_COLORS.balance },
+    { key: 'Principle',   label: 'Principle',   value: latest.principle,    color: SERIES_COLORS.principle },
+    { key: realRateLabel, label: realRateLabel,  value: latest.realExpected, color: SERIES_COLORS.realExpected },
+    { key: rateLabel,     label: rateLabel,      value: latest.expected,     color: SERIES_COLORS.expected },
   ];
 
   function toggleSeries(name: string) {
@@ -66,11 +68,6 @@ export function ReturnsPlot({ data, annualRate }: Props) {
             stroke={CHART_STYLE.grid}
           />
           <Tooltip content={<AlignedTooltip />} />
-          <Legend verticalAlign="top" onClick={e => toggleSeries(e.value)}
-            formatter={(value) => (
-              <span style={{ cursor: 'pointer', opacity: hidden.has(value) ? 0.35 : 1 }}>{value}</span>
-            )}
-          />
           <Line type="linear" dataKey="principle" name="Principle"
             stroke={SERIES_COLORS.principle} dot={showDots ? { r: 3 } : false} strokeWidth={2}
             hide={hidden.has('Principle')} />
@@ -80,13 +77,23 @@ export function ReturnsPlot({ data, annualRate }: Props) {
           <Line type="linear" dataKey="expected" name={rateLabel}
             stroke={SERIES_COLORS.expected} dot={showDots ? { r: 3 } : false} strokeWidth={2}
             hide={hidden.has(rateLabel)} />
+          <Line type="linear" dataKey="realExpected" name={realRateLabel}
+            stroke={SERIES_COLORS.realExpected} dot={showDots ? { r: 3 } : false} strokeWidth={2}
+            hide={hidden.has(realRateLabel)} />
         </LineChart>
       </ResponsiveContainer>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: 12, fontSize: 14, paddingInline: 30 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 48, alignItems: 'flex-start', marginTop: 12, fontSize: 14, paddingInline: 30 }}>
         <table style={{ borderCollapse: 'collapse' }}>
           <tbody>
-            {latestPoints.map(({ label, value, color }) => (
-              <tr key={label}>
+            {series.map(({ key, label, value, color }) => (
+              <tr
+                key={key}
+                onClick={() => toggleSeries(key)}
+                style={{ cursor: 'pointer', opacity: hidden.has(key) ? 0.35 : 1 }}
+              >
+                <td style={{ paddingRight: 8, paddingBottom: 2 }}>
+                  <span style={{ display: 'inline-block', width: 12, height: 3, background: color, borderRadius: 1, verticalAlign: 'middle' }} />
+                </td>
                 <td style={{ textAlign: 'right', paddingRight: 12, color }}>{label}:</td>
                 <td style={{ textAlign: 'left', color }}>{formatDollar(value)}</td>
               </tr>

@@ -60,7 +60,7 @@ export default function App() {
             {returns.error && <p style={{ color: 'red' }}>{returns.error}</p>}
           </div>
           <div style={{ marginTop: 24 }}>
-            <ReturnsPlot data={returns.chartData} annualRate={returnsRate} />
+            <ReturnsPlot data={returns.chartData} annualRate={returnsRate} realRate={returns.realRate} />
           </div>
         </div>
       )}

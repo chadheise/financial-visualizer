@@ -71,17 +71,23 @@ export function StackedPlot({ data, seriesKeys, seriesColors }: Props) {
           ))}
         </AreaChart>
       </ResponsiveContainer>
-      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '12px 20px', marginTop: 12, paddingInline: 30 }}>
-        {seriesKeys.map((key, i) => (
-          <span
-            key={key}
-            onClick={() => toggleSeries(key)}
-            style={{ cursor: 'pointer', opacity: hidden.has(key) ? 0.35 : 1, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
-          >
-            <span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 2, background: seriesColors[i] }} />
-            {key}
-          </span>
-        ))}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12, paddingInline: 30 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, auto)', columnGap: 40, rowGap: 4, fontSize: 14 }}>
+          {seriesKeys.map((key, i) => {
+            const finalValue = data[data.length - 1][key] as number;
+            return (
+              <div
+                key={key}
+                onClick={() => toggleSeries(key)}
+                style={{ cursor: 'pointer', opacity: hidden.has(key) ? 0.35 : 1, display: 'flex', alignItems: 'center', gap: 0 }}
+              >
+                <span style={{ display: 'inline-block', width: 12, height: 3, background: seriesColors[i], borderRadius: 1, marginRight: 8, flexShrink: 0 }} />
+                <span style={{ color: seriesColors[i], textAlign: 'right', marginRight: 12 }}>{key}:</span>
+                <span style={{ color: seriesColors[i] }}>{formatDollar(finalValue)}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
