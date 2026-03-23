@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getDisplayName, getFolderDisplayName, groupByFolder } from '../../lib/fileUtils';
 
 interface Props {
   onLoad: (sourcesPath: string, startDate: string) => void;
@@ -39,8 +40,12 @@ export function StackedControls({ onLoad, loading }: Props) {
           onChange={e => setSelectedFile(e.target.value)}
           style={{ marginLeft: 8 }}
         >
-          {files.map(f => (
-            <option key={f} value={f}>{f}</option>
+          {Array.from(groupByFolder(files)).map(([folder, paths]) => (
+            <optgroup key={folder} label={getFolderDisplayName(paths[0])}>
+              {paths.map(f => (
+                <option key={f} value={f}>{getDisplayName(f)}</option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </label>
