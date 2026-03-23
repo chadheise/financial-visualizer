@@ -2,6 +2,17 @@
 
 This package provides a python script for generating various plots of financial data over time.
 
+## Interactive mode
+
+For an interactive view accessible in a browser:
+
+```
+cd interactive
+npm run dev
+```
+
+Then open http://localhost:5173/ in a browser
+
 ## Stacked Plot
 
 - Useful for creating an aggregate view of a variety of financial accounts.
