@@ -10,6 +10,7 @@ export function StackedControls({ onLoad, loading }: Props) {
   const [files, setFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState('');
   const [startDate, setStartDate] = useState('');
+  const [plottedState, setPlottedState] = useState<{ file: string; startDate: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/list-files')
@@ -21,9 +22,14 @@ export function StackedControls({ onLoad, loading }: Props) {
       });
   }, []);
 
+  const isPlotted = plottedState !== null &&
+    plottedState.file === selectedFile &&
+    plottedState.startDate === startDate;
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedFile) return;
+    setPlottedState({ file: selectedFile, startDate });
     // Convert YYYY-MM-DD (date input) → MM/DD/YYYY (expected by API)
     const formatted = startDate
       ? startDate.replace(/^(\d{4})-(\d{2})-(\d{2})$/, '$2/$3/$1')
@@ -58,7 +64,18 @@ export function StackedControls({ onLoad, loading }: Props) {
           style={{ marginLeft: 8 }}
         />
       </label>
-      <button type="submit" disabled={loading || !selectedFile}>
+      <button
+        type="submit"
+        disabled={loading || !selectedFile}
+        style={{
+          marginLeft: 'auto',
+          padding: '8px 24px',
+          fontSize: 15,
+          background: loading ? undefined : isPlotted ? '#4a7c4e' : '#a07c28',
+          color: '#fff',
+          border: 'none',
+        }}
+      >
         {loading ? 'Loading...' : 'Plot'}
       </button>
     </form>

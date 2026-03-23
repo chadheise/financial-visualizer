@@ -1,4 +1,4 @@
-import type { SourceEntry, ReturnsChartData } from '../types';
+import type { SourceEntry, IndexEntry, ReturnsChartData } from '../types';
 
 function daysInYear(year: number): number {
   // Same as Python: (Dec 31 - Jan 1).days + 1
@@ -54,17 +54,11 @@ export function createExpectedSeries(entries: SourceEntry[], annualRate: number)
   return series;
 }
 
-// Finds the annual return rate at which the expected series would end at the
-// same value as the actual account balance. Uses binary search because
-// createExpectedSeries is monotonically increasing with respect to rate —
-// a higher rate always produces a higher ending value — so the search is
-// guaranteed to converge on the unique solution.
-export function solveRealRate(entries: SourceEntry[]): number {
-  if (entries.length < 2) return 0;
-
-  // Target is the actual final balance we want the expected series to match.
-  const target = createBalanceSeries(entries).at(-1)!;
-
+// Finds the annual rate at which createExpectedSeries would end at `target`.
+// Uses binary search because createExpectedSeries is monotonically increasing
+// with respect to rate — a higher rate always produces a higher ending value —
+// so the search is guaranteed to converge on the unique solution.
+function solveRateForTarget(entries: SourceEntry[], target: number): number {
   // Search bounds: -99% is the practical floor (total loss), 1000% is a
   // ceiling that will never be reached in practice. The search converges in
   // the same number of iterations regardless of how wide the bounds are.
@@ -83,6 +77,12 @@ export function solveRealRate(entries: SourceEntry[]): number {
   }
 
   return (low + high) / 2;
+}
+
+export function solveRealRate(entries: SourceEntry[]): number {
+  if (entries.length < 2) return 0;
+  // Target is the actual final balance we want the expected series to match.
+  return solveRateForTarget(entries, createBalanceSeries(entries).at(-1)!);
 }
 
 // Interpolates a pre-computed series (paired with its source dates) onto a
@@ -112,11 +112,62 @@ function interpolateSeriesToDates(
   });
 }
 
+// For each account period [i-1, i], looks up the index open at the start date
+// and the index close at the end date, then applies that period's return rate
+// to the running expected balance. Falls back to floor lookup (nearest trading
+// day on or before the requested date) so non-trading-day account entries still
+// find a valid index price.
+export function createIndexExpectedSeries(entries: SourceEntry[], indexEntries: IndexEntry[]): number[] {
+  // Sort index entries once and pre-compute timestamps for binary search
+  const sorted = [...indexEntries].sort(
+    (a, b) => parseDate(a.date).getTime() - parseDate(b.date).getTime()
+  );
+  const sortedTs = sorted.map(e => parseDate(e.date).getTime());
+
+  // Returns the latest index entry whose date is on or before dateStr
+  function floorEntry(dateStr: string): IndexEntry | null {
+    const ts = parseDate(dateStr).getTime();
+    let lo = 0, hi = sorted.length - 1, idx = -1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (sortedTs[mid] <= ts) { idx = mid; lo = mid + 1; }
+      else hi = mid - 1;
+    }
+    return idx >= 0 ? sorted[idx] : null;
+  }
+
+  const series: number[] = [];
+  let running = 0;
+
+  for (let i = 0; i < entries.length; i++) {
+    if (i === 0) {
+      // No prior period to compound — just seed with the first investment
+      running += entries[0].investment;
+    } else {
+      const prev = floorEntry(entries[i - 1].date);
+      const curr = floorEntry(entries[i].date);
+      if (prev && curr && prev.open !== 0) {
+        // Return rate for the period: from the open of the previous date to
+        // the close of the current date, matching the user's description
+        const returnRate = (curr.close - prev.open) / prev.open;
+        running = running * (1 + returnRate) + entries[i].investment;
+      } else {
+        // No index data for this period — just add the investment unchanged
+        running += entries[i].investment;
+      }
+    }
+    series.push(running);
+  }
+
+  return series;
+}
+
 export function buildReturnsChartData(
   entries: SourceEntry[],
   annualRate: number,
-  comparisonEntries?: SourceEntry[]
-): { chartData: ReturnsChartData[]; realRate: number; comparisonRealRate: number | null } {
+  comparisonEntries?: SourceEntry[],
+  indexEntries?: IndexEntry[]
+): { chartData: ReturnsChartData[]; realRate: number; comparisonRealRate: number | null; indexRealRate: number | null } {
   const realRate = solveRealRate(entries);
   const principle = createPrincipleSeries(entries);
   const balance = createBalanceSeries(entries);
@@ -135,6 +186,9 @@ export function buildReturnsChartData(
     comparisonRealExpecteds = interpolateSeriesToDates(compDates, createExpectedSeries(comparisonEntries, comparisonRealRate), primaryDates);
   }
 
+  const indexExpected = indexEntries ? createIndexExpectedSeries(entries, indexEntries) : null;
+  const indexRealRate = indexExpected ? solveRateForTarget(entries, indexExpected.at(-1)!) : null;
+
   const chartData = entries.map((e, i) => ({
     date: e.date,
     principle: principle[i],
@@ -147,7 +201,8 @@ export function buildReturnsChartData(
     ...(comparisonRealExpecteds?.[i] !== null && comparisonRealExpecteds?.[i] !== undefined
       ? { comparisonRealExpected: comparisonRealExpecteds[i] as number }
       : {}),
+    ...(indexExpected ? { indexExpected: indexExpected[i] } : {}),
   }));
 
-  return { chartData, realRate, comparisonRealRate };
+  return { chartData, realRate, comparisonRealRate, indexRealRate };
 }

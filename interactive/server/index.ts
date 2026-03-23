@@ -20,6 +20,18 @@ function safePath(relativePath: string): string {
   return resolved;
 }
 
+// List all CSV files in indexData/
+app.get('/api/list-index-files', (_req, res) => {
+  const dirPath = path.join(PROJECT_ROOT, 'indexData');
+  const files: string[] = [];
+  if (fs.existsSync(dirPath)) {
+    for (const entry of fs.readdirSync(dirPath)) {
+      if (entry.endsWith('.csv')) files.push(`indexData/${entry}`);
+    }
+  }
+  res.json(files);
+});
+
 // List all CSV files in sampleData/ and myData/
 app.get('/api/list-files', (_req, res) => {
   const dirs = ['sampleData', 'myData'];

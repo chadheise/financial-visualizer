@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import type { SourceEntry } from '../types';
+import type { SourceEntry, IndexEntry } from '../types';
 
 const HEADER_MAP: Record<string, keyof SourceEntry> = {
   'date': 'date',
@@ -52,4 +52,20 @@ export function parseSourceCsv(csvText: string): SourceEntry[] {
   });
 
   return entries.sort((a, b) => parseDate(a.date) - parseDate(b.date));
+}
+
+export function parseIndexCsv(csvText: string): IndexEntry[] {
+  const result = Papa.parse<Record<string, string>>(csvText, {
+    header: true,
+    skipEmptyLines: true,
+  });
+
+  return result.data
+    .map(row => ({
+      date: row['Date']?.trim() ?? '',
+      open: parseFloat(row['Open']) || 0,
+      close: parseFloat(row['Close']) || 0,
+    }))
+    .filter(e => e.date)
+    .sort((a, b) => parseDate(a.date) - parseDate(b.date));
 }

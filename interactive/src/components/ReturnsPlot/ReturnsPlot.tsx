@@ -18,13 +18,15 @@ interface Props {
   realRate: number | null;
   comparisonName: string | null;
   comparisonRealRate: number | null;
+  indexName: string | null;
+  indexRealRate: number | null;
 }
 
 function formatDollar(value: number): string {
   return '$' + Math.round(value).toLocaleString();
 }
 
-export function ReturnsPlot({ data, annualRate, realRate, comparisonName, comparisonRealRate }: Props) {
+export function ReturnsPlot({ data, annualRate, realRate, comparisonName, comparisonRealRate, indexName, indexRealRate }: Props) {
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [showDots, setShowDots] = useState(false);
 
@@ -40,11 +42,17 @@ export function ReturnsPlot({ data, annualRate, realRate, comparisonName, compar
     { key: rateLabel,     label: rateLabel,     value: latest.expected,     color: SERIES_COLORS.expected },
   ];
   const comparisonSeries = [
-    ...(comparisonName && latest.comparisonBalance !== undefined ? [{
-      key: comparisonName, label: comparisonName, value: latest.comparisonBalance, color: SERIES_COLORS.comparisonBalance,
+    ...(indexName && latest.indexExpected !== undefined ? [{
+      key: 'indexExpected',
+      label: indexRealRate !== null ? `${indexName} (${(indexRealRate * 100).toFixed(2)}%/yr)` : indexName,
+      value: latest.indexExpected,
+      color: SERIES_COLORS.indexExpected,
     }] : []),
-    ...(comparisonName && comparisonRealRate !== null && latest.comparisonRealExpected !== undefined ? [{
-      key: `${comparisonName}-real`, label: `${RETURNS_LABELS.realSeries(comparisonRealRate)}`, value: latest.comparisonRealExpected, color: SERIES_COLORS.comparisonRealExpected,
+    ...(comparisonName && latest.comparisonBalance !== undefined ? [{
+      key: comparisonName,
+      label: comparisonRealRate !== null ? `${comparisonName} ${RETURNS_LABELS.realSeries(comparisonRealRate)}` : comparisonName,
+      value: latest.comparisonBalance,
+      color: SERIES_COLORS.comparisonBalance,
     }] : []),
   ];
 
@@ -95,10 +103,11 @@ export function ReturnsPlot({ data, annualRate, realRate, comparisonName, compar
               stroke={SERIES_COLORS.comparisonBalance} dot={showDots ? { r: 3 } : false} strokeWidth={2}
               hide={hidden.has(comparisonName)} connectNulls={false} />
           )}
-          {comparisonName && comparisonRealRate !== null && (
-            <Line type="linear" dataKey="comparisonRealExpected" name={`${comparisonName}-real`}
-              stroke={SERIES_COLORS.comparisonRealExpected} dot={showDots ? { r: 3 } : false} strokeWidth={2}
-              hide={hidden.has(`${comparisonName}-real`)} connectNulls={false} />
+
+          {indexName && (
+            <Line type="linear" dataKey="indexExpected" name="Index Expected"
+              stroke={SERIES_COLORS.indexExpected} dot={showDots ? { r: 3 } : false} strokeWidth={2}
+              hide={hidden.has('indexExpected')} connectNulls={false} />
           )}
         </LineChart>
       </ResponsiveContainer>

@@ -11,6 +11,12 @@ export interface SourceConfig {
   color: string;
 }
 
+export interface IndexEntry {
+  date: string;
+  open: number;
+  close: number;
+}
+
 export interface ReturnsChartData {
   date: string;
   principle: number;
@@ -19,6 +25,7 @@ export interface ReturnsChartData {
   realExpected: number;
   comparisonBalance?: number;
   comparisonRealExpected?: number;
+  indexExpected?: number;
 }
 
 export interface StackedChartData {

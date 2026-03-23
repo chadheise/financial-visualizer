@@ -14,6 +14,7 @@ export const SERIES_COLORS = {
   realExpected:      '#c9a84c',  // muted amber
   comparisonBalance:      '#a07bc4',  // muted purple
   comparisonRealExpected: '#7bbfb0',  // muted teal
+  indexExpected:          '#d4956a',  // muted orange
 } as const;
 
 // Recharts component stroke/fill colors that respect the dark theme

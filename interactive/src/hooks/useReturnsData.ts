@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ReturnsChartData } from '../types';
-import { parseSourceCsv } from '../lib/csvParser';
+import { parseSourceCsv, parseIndexCsv } from '../lib/csvParser';
 import { buildReturnsChartData } from '../lib/returnsCalc';
 import { getDisplayName } from '../lib/fileUtils';
 
@@ -9,6 +9,8 @@ export function useReturnsData() {
   const [realRate, setRealRate] = useState<number | null>(null);
   const [comparisonName, setComparisonName] = useState<string | null>(null);
   const [comparisonRealRate, setComparisonRealRate] = useState<number | null>(null);
+  const [indexName, setIndexName] = useState<string | null>(null);
+  const [indexRealRate, setIndexRealRate] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,17 +25,31 @@ export function useReturnsData() {
     return parseSourceCsv(content);
   }
 
-  async function load(filePath: string, annualRate: number, comparisonPath?: string) {
+  async function loadIndexFile(path: string) {
+    const res = await fetch('/api/load-file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const { content } = await res.json();
+    return parseIndexCsv(content);
+  }
+
+  async function load(filePath: string, annualRate: number, comparisonPath?: string, indexPath?: string) {
     setLoading(true);
     setError(null);
     try {
       const entries = await loadFile(filePath);
       const comparisonEntries = comparisonPath ? await loadFile(comparisonPath) : undefined;
-      const { chartData, realRate, comparisonRealRate } = buildReturnsChartData(entries, annualRate, comparisonEntries);
+      const indexEntries = indexPath ? await loadIndexFile(indexPath) : undefined;
+      const { chartData, realRate, comparisonRealRate, indexRealRate } = buildReturnsChartData(entries, annualRate, comparisonEntries, indexEntries);
       setChartData(chartData);
       setRealRate(realRate);
       setComparisonRealRate(comparisonRealRate);
       setComparisonName(comparisonPath ? getDisplayName(comparisonPath) : null);
+      setIndexName(indexPath ? getDisplayName(indexPath) : null);
+      setIndexRealRate(indexRealRate);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -41,5 +57,5 @@ export function useReturnsData() {
     }
   }
 
-  return { chartData, realRate, comparisonName, comparisonRealRate, loading, error, load };
+  return { chartData, realRate, comparisonName, comparisonRealRate, indexName, indexRealRate, loading, error, load };
 }
