@@ -11,6 +11,7 @@ type Tab = 'returns' | 'stacked';
 export default function App() {
   const [tab, setTab] = useState<Tab>('returns');
   const [returnsRate, setReturnsRate] = useState(0.08);
+  const [showBenchmark, setShowBenchmark] = useState(false);
 
   const returns = useReturnsData();
   const stacked = useStackedData();
@@ -55,12 +56,14 @@ export default function App() {
           <div style={{ paddingInline: 24 }}>
             <ReturnsControls
               loading={returns.loading}
-              onLoad={(file, rate, comparisonPath, indexPath) => { setReturnsRate(rate); returns.load(file, rate, comparisonPath, indexPath); }}
+              showBenchmark={showBenchmark}
+              onShowBenchmarkChange={setShowBenchmark}
+              onLoad={(file, rate, comparisonPath, indexPath, startDate) => { setReturnsRate(rate); returns.load(file, rate, comparisonPath, indexPath, startDate); }}
             />
             {returns.error && <p style={{ color: 'red' }}>{returns.error}</p>}
           </div>
           <div style={{ marginTop: 24 }}>
-            <ReturnsPlot data={returns.chartData} annualRate={returnsRate} realRate={returns.realRate} comparisonName={returns.comparisonName} comparisonRealRate={returns.comparisonRealRate} indexName={returns.indexName} indexRealRate={returns.indexRealRate} />
+            <ReturnsPlot data={returns.chartData} annualRate={returnsRate} realRate={returns.realRate} showBenchmark={showBenchmark} comparisonName={returns.comparisonName} comparisonRealRate={returns.comparisonRealRate} indexName={returns.indexName} indexRealRate={returns.indexRealRate} />
           </div>
         </div>
       )}

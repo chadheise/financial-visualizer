@@ -18,7 +18,9 @@ function daysBetween(a: string, b: string): number {
 }
 
 export function createPrincipleSeries(entries: SourceEntry[]): number[] {
-  let running = 0;
+  // Seed from the first entry's starting balance so filtered views start at the
+  // correct value rather than rebuilding from zero.
+  let running = entries.length > 0 ? entries[0].balance : 0;
   return entries.map(e => {
     running += e.investment;
     return running;
@@ -26,7 +28,8 @@ export function createPrincipleSeries(entries: SourceEntry[]): number[] {
 }
 
 export function createBalanceSeries(entries: SourceEntry[]): number[] {
-  let running = 0;
+  // Seed from the first entry's starting balance for the same reason.
+  let running = entries.length > 0 ? entries[0].balance : 0;
   return entries.map(e => {
     running += e.investment + e.earnings;
     return running;
@@ -35,7 +38,9 @@ export function createBalanceSeries(entries: SourceEntry[]): number[] {
 
 export function createExpectedSeries(entries: SourceEntry[], annualRate: number): number[] {
   const series: number[] = [];
-  let running = 0;
+  // Seed from the first entry's starting balance so the expected series starts
+  // at the actual account value regardless of the chosen start date.
+  let running = entries.length > 0 ? entries[0].balance : 0;
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
@@ -137,11 +142,14 @@ export function createIndexExpectedSeries(entries: SourceEntry[], indexEntries: 
   }
 
   const series: number[] = [];
-  let running = 0;
+  // Seed from the first entry's starting balance so the series starts at the
+  // actual account value regardless of the chosen start date.
+  let running = entries.length > 0 ? entries[0].balance : 0;
 
   for (let i = 0; i < entries.length; i++) {
     if (i === 0) {
-      // No prior period to compound — just seed with the first investment
+      // No prior period to compound — just add the first period's investment
+      // on top of the seeded balance.
       running += entries[0].investment;
     } else {
       const prev = floorEntry(entries[i - 1].date);

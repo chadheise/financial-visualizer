@@ -3,18 +3,21 @@ import { getDisplayName, getFolderDisplayName, groupByFolder } from '../../lib/f
 import { RETURNS_LABELS } from '../../theme';
 
 interface Props {
-  onLoad: (filePath: string, annualRate: number, comparisonPath?: string, indexPath?: string) => void;
+  onLoad: (filePath: string, annualRate: number, comparisonPath?: string, indexPath?: string, startDate?: string) => void;
   loading: boolean;
+  showBenchmark: boolean;
+  onShowBenchmarkChange: (v: boolean) => void;
 }
 
-export function ReturnsControls({ onLoad, loading }: Props) {
+export function ReturnsControls({ onLoad, loading, showBenchmark, onShowBenchmarkChange }: Props) {
   const [files, setFiles] = useState<string[]>([]);
   const [selectedFile, setSelectedFile] = useState('');
   const [rate, setRate] = useState('8');
   const [comparisonFile, setComparisonFile] = useState('');
   const [indexFiles, setIndexFiles] = useState<string[]>([]);
   const [indexFile, setIndexFile] = useState('');
-  const [plottedState, setPlottedState] = useState<{ file: string; rate: string; comparison: string; index: string } | null>(null);
+  const [startDate, setStartDate] = useState('');
+  const [plottedState, setPlottedState] = useState<{ file: string; rate: string; comparison: string; index: string; startDate: string } | null>(null);
 
   useEffect(() => {
     fetch('/api/list-files')
@@ -33,13 +36,14 @@ export function ReturnsControls({ onLoad, loading }: Props) {
     plottedState.file === selectedFile &&
     plottedState.rate === rate &&
     plottedState.comparison === comparisonFile &&
-    plottedState.index === indexFile;
+    plottedState.index === indexFile &&
+    plottedState.startDate === startDate;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedFile) return;
-    setPlottedState({ file: selectedFile, rate, comparison: comparisonFile, index: indexFile });
-    onLoad(selectedFile, parseFloat(rate) / 100, comparisonFile || undefined, indexFile || undefined);
+    setPlottedState({ file: selectedFile, rate, comparison: comparisonFile, index: indexFile, startDate });
+    onLoad(selectedFile, parseFloat(rate) / 100, comparisonFile || undefined, indexFile || undefined, startDate || undefined);
   }
 
   const fileSelect = (value: string, onChange: (v: string) => void) => (
@@ -61,18 +65,14 @@ export function ReturnsControls({ onLoad, loading }: Props) {
           Data file:
           {fileSelect(selectedFile, setSelectedFile)}
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          {RETURNS_LABELS.benchmarkControl}:
+        <label>
+          Start date:
           <input
-            type="number"
-            step="0.1"
-            min="0"
-            max="100"
-            value={rate}
-            onChange={e => setRate(e.target.value)}
-            style={{ marginLeft: 8, width: 64 }}
+            type="date"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            style={{ marginLeft: 8 }}
           />
-          %
         </label>
         <button
           type="submit"
@@ -111,6 +111,27 @@ export function ReturnsControls({ onLoad, loading }: Props) {
               </optgroup>
             ))}
           </select>
+        </label>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <input
+            type="checkbox"
+            checked={showBenchmark}
+            onChange={e => onShowBenchmarkChange(e.target.checked)}
+          />
+          <span style={{ opacity: showBenchmark ? 1 : 0.4 }}>
+            {RETURNS_LABELS.benchmarkControl}:
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="100"
+              value={rate}
+              onChange={e => setRate(e.target.value)}
+              style={{ marginLeft: 4, width: 64 }}
+              disabled={!showBenchmark}
+            />
+            %
+          </span>
         </label>
       </div>
 

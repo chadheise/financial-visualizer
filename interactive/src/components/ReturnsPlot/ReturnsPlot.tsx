@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { toPng } from 'html-to-image';
 import {
   LineChart,
   Line,
@@ -16,6 +17,7 @@ interface Props {
   data: ReturnsChartData[];
   annualRate: number;
   realRate: number | null;
+  showBenchmark: boolean;
   comparisonName: string | null;
   comparisonRealRate: number | null;
   indexName: string | null;
@@ -26,20 +28,31 @@ function formatDollar(value: number): string {
   return '$' + Math.round(value).toLocaleString();
 }
 
-export function ReturnsPlot({ data, annualRate, realRate, comparisonName, comparisonRealRate, indexName, indexRealRate }: Props) {
+export function ReturnsPlot({ data, annualRate, realRate, showBenchmark, comparisonName, comparisonRealRate, indexName, indexRealRate }: Props) {
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [showDots, setShowDots] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  function handleExport() {
+    if (!containerRef.current) return;
+    toPng(containerRef.current, { cacheBust: true }).then(dataUrl => {
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'returns-plot.png';
+      a.click();
+    });
+  }
 
   if (data.length === 0) return null;
 
-  const rateLabel = RETURNS_LABELS.benchmarkSeries(annualRate);
-  const realRateLabel = realRate !== null ? RETURNS_LABELS.realSeries(realRate) : 'Real Return';
+  const rateLabel = `Benchmark (${(annualRate * 100).toFixed(2)}%/yr)`;
+  const realRateLabel = realRate !== null ? `Real (${(realRate * 100).toFixed(2)}%/yr)` : 'Real Return';
   const latest = data[data.length - 1];
   const primarySeries = [
-    { key: 'Balance',     label: 'Balance',     value: latest.balance,      color: SERIES_COLORS.balance },
+    { key: 'Balance', label: realRate !== null ? `Balance (${(realRate * 100).toFixed(2)}%/yr)` : 'Balance', value: latest.balance, color: SERIES_COLORS.balance },
     { key: 'Principle',   label: 'Principle',   value: latest.principle,    color: SERIES_COLORS.principle },
     { key: realRateLabel, label: realRateLabel, value: latest.realExpected, color: SERIES_COLORS.realExpected },
-    { key: rateLabel,     label: rateLabel,     value: latest.expected,     color: SERIES_COLORS.expected },
+    ...(showBenchmark ? [{ key: rateLabel, label: rateLabel, value: latest.expected, color: SERIES_COLORS.expected }] : []),
   ];
   const comparisonSeries = [
     ...(indexName && latest.indexExpected !== undefined ? [{
@@ -65,7 +78,21 @@ export function ReturnsPlot({ data, annualRate, realRate, comparisonName, compar
   }
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', position: 'relative' }}>
+      <button
+        onClick={handleExport}
+        title="Export as image"
+        style={{ position: 'absolute', top: 0, right: 24, background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text)', opacity: 0.6 }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      </button>
+      <div ref={containerRef}>
       <h2 style={{ textAlign: 'center' }}>Financial Returns Over Time</h2>
       <ResponsiveContainer width="100%" height={500}>
         <LineChart data={data} margin={{ top: 10, right: 30, left: 30, bottom: 60 }}>
@@ -94,7 +121,7 @@ export function ReturnsPlot({ data, annualRate, realRate, comparisonName, compar
             hide={hidden.has('Balance')} />
           <Line type="linear" dataKey="expected" name={rateLabel}
             stroke={SERIES_COLORS.expected} dot={showDots ? { r: 3 } : false} strokeWidth={2}
-            hide={hidden.has(rateLabel)} />
+            hide={!showBenchmark || hidden.has(rateLabel)} />
           <Line type="linear" dataKey="realExpected" name={realRateLabel}
             stroke={SERIES_COLORS.realExpected} dot={showDots ? { r: 3 } : false} strokeWidth={2}
             hide={hidden.has(realRateLabel)} />
@@ -148,6 +175,9 @@ export function ReturnsPlot({ data, annualRate, realRate, comparisonName, compar
             </tbody>
           </table>
         )}
+      </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
         <label style={{ cursor: 'pointer', userSelect: 'none', fontSize: 13 }}>
           <input type="checkbox" checked={showDots} onChange={e => setShowDots(e.target.checked)} style={{ marginRight: 6 }} />
           Show data point markers
