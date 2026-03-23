@@ -55,12 +55,12 @@ export default function App() {
           <div style={{ paddingInline: 24 }}>
             <ReturnsControls
               loading={returns.loading}
-              onLoad={(file, rate) => { setReturnsRate(rate); returns.load(file, rate); }}
+              onLoad={(file, rate, comparisonPath) => { setReturnsRate(rate); returns.load(file, rate, comparisonPath); }}
             />
             {returns.error && <p style={{ color: 'red' }}>{returns.error}</p>}
           </div>
           <div style={{ marginTop: 24 }}>
-            <ReturnsPlot data={returns.chartData} annualRate={returnsRate} realRate={returns.realRate} />
+            <ReturnsPlot data={returns.chartData} annualRate={returnsRate} realRate={returns.realRate} comparisonName={returns.comparisonName} comparisonRealRate={returns.comparisonRealRate} />
           </div>
         </div>
       )}

@@ -2,28 +2,38 @@ import { useState } from 'react';
 import type { ReturnsChartData } from '../types';
 import { parseSourceCsv } from '../lib/csvParser';
 import { buildReturnsChartData } from '../lib/returnsCalc';
+import { getDisplayName } from '../lib/fileUtils';
 
 export function useReturnsData() {
   const [chartData, setChartData] = useState<ReturnsChartData[]>([]);
   const [realRate, setRealRate] = useState<number | null>(null);
+  const [comparisonName, setComparisonName] = useState<string | null>(null);
+  const [comparisonRealRate, setComparisonRealRate] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function load(filePath: string, annualRate: number) {
+  async function loadFile(path: string) {
+    const res = await fetch('/api/load-file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const { content } = await res.json();
+    return parseSourceCsv(content);
+  }
+
+  async function load(filePath: string, annualRate: number, comparisonPath?: string) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/load-file', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: filePath }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const { content } = await res.json();
-      const entries = parseSourceCsv(content);
-      const { chartData, realRate } = buildReturnsChartData(entries, annualRate);
+      const entries = await loadFile(filePath);
+      const comparisonEntries = comparisonPath ? await loadFile(comparisonPath) : undefined;
+      const { chartData, realRate, comparisonRealRate } = buildReturnsChartData(entries, annualRate, comparisonEntries);
       setChartData(chartData);
       setRealRate(realRate);
+      setComparisonRealRate(comparisonRealRate);
+      setComparisonName(comparisonPath ? getDisplayName(comparisonPath) : null);
     } catch (e) {
       setError(String(e));
     } finally {
@@ -31,5 +41,5 @@ export function useReturnsData() {
     }
   }
 
-  return { chartData, realRate, loading, error, load };
+  return { chartData, realRate, comparisonName, comparisonRealRate, loading, error, load };
 }

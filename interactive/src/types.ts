@@ -17,6 +17,8 @@ export interface ReturnsChartData {
   balance: number;
   expected: number;
   realExpected: number;
+  comparisonBalance?: number;
+  comparisonRealExpected?: number;
 }
 
 export interface StackedChartData {

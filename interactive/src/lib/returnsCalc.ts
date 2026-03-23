@@ -85,15 +85,55 @@ export function solveRealRate(entries: SourceEntry[]): number {
   return (low + high) / 2;
 }
 
+// Interpolates a pre-computed series (paired with its source dates) onto a
+// set of target dates using linear interpolation. Returns null for target
+// dates that fall before the source series begins.
+function interpolateSeriesToDates(
+  sourceDates: string[],
+  sourceValues: number[],
+  targetDates: string[]
+): (number | null)[] {
+  if (sourceDates.length === 0) return targetDates.map(() => null);
+
+  const sourceTs = sourceDates.map(d => parseDate(d).getTime());
+
+  return targetDates.map(date => {
+    const ts = parseDate(date).getTime();
+    if (ts < sourceTs[0]) return null;
+    if (ts >= sourceTs[sourceTs.length - 1]) return sourceValues[sourceValues.length - 1];
+
+    for (let i = 1; i < sourceTs.length; i++) {
+      if (ts <= sourceTs[i]) {
+        const t = (ts - sourceTs[i - 1]) / (sourceTs[i] - sourceTs[i - 1]);
+        return sourceValues[i - 1] + t * (sourceValues[i] - sourceValues[i - 1]);
+      }
+    }
+    return sourceValues[sourceValues.length - 1];
+  });
+}
+
 export function buildReturnsChartData(
   entries: SourceEntry[],
-  annualRate: number
-): { chartData: ReturnsChartData[]; realRate: number } {
+  annualRate: number,
+  comparisonEntries?: SourceEntry[]
+): { chartData: ReturnsChartData[]; realRate: number; comparisonRealRate: number | null } {
   const realRate = solveRealRate(entries);
   const principle = createPrincipleSeries(entries);
   const balance = createBalanceSeries(entries);
   const expected = createExpectedSeries(entries, annualRate);
   const realExpected = createExpectedSeries(entries, realRate);
+
+  const primaryDates = entries.map(e => e.date);
+  let comparisonBalances: (number | null)[] | null = null;
+  let comparisonRealExpecteds: (number | null)[] | null = null;
+  let comparisonRealRate: number | null = null;
+
+  if (comparisonEntries) {
+    const compDates = comparisonEntries.map(e => e.date);
+    comparisonRealRate = solveRealRate(comparisonEntries);
+    comparisonBalances = interpolateSeriesToDates(compDates, createBalanceSeries(comparisonEntries), primaryDates);
+    comparisonRealExpecteds = interpolateSeriesToDates(compDates, createExpectedSeries(comparisonEntries, comparisonRealRate), primaryDates);
+  }
 
   const chartData = entries.map((e, i) => ({
     date: e.date,
@@ -101,7 +141,13 @@ export function buildReturnsChartData(
     balance: balance[i],
     expected: expected[i],
     realExpected: realExpected[i],
+    ...(comparisonBalances?.[i] !== null && comparisonBalances?.[i] !== undefined
+      ? { comparisonBalance: comparisonBalances[i] as number }
+      : {}),
+    ...(comparisonRealExpecteds?.[i] !== null && comparisonRealExpecteds?.[i] !== undefined
+      ? { comparisonRealExpected: comparisonRealExpecteds[i] as number }
+      : {}),
   }));
 
-  return { chartData, realRate: solveRealRate(entries) };
+  return { chartData, realRate, comparisonRealRate };
 }

@@ -8,10 +8,12 @@ export const RETURNS_LABELS = {
 
 // Chart series colors — muted palette that works on dark backgrounds
 export const SERIES_COLORS = {
-  principle:    '#c97b7b',  // muted rose
-  balance:      '#6a9fd4',  // soft steel blue
-  expected:     '#6aad87',  // muted sage green
-  realExpected: '#c9a84c',  // muted amber
+  principle:         '#c97b7b',  // muted rose
+  balance:           '#6a9fd4',  // soft steel blue
+  expected:          '#6aad87',  // muted sage green
+  realExpected:      '#c9a84c',  // muted amber
+  comparisonBalance:      '#a07bc4',  // muted purple
+  comparisonRealExpected: '#7bbfb0',  // muted teal
 } as const;
 
 // Recharts component stroke/fill colors that respect the dark theme
