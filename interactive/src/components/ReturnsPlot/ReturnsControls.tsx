@@ -134,7 +134,12 @@ export function ReturnsControls({ onLoad, loading, showBenchmark, onShowBenchmar
           </span>
         </label>
       </div>
-
+      {indexFile && (
+        <p style={{ margin: 0, fontSize: 12, color: 'var(--text)', opacity: 0.55 }}>
+          Index comparison shows the expected portfolio value if all funds had been invested in the selected index,
+          assuming the same deposit and withdrawal amounts and dates.
+        </p>
+      )}
     </form>
   );
 }
